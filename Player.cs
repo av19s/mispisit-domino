@@ -35,6 +35,31 @@ namespace domino
             Console.WriteLine($"Кости игрока {Name}:");
             koloda.ShowPlayerBones(_bones);
         }
+        public int BoneCount
+        {
+            get { return _bones.Count; }
+        }
+        public TBone GetBone(int index)
+        {
+            return _bones[index];
+        }
+        public TBone RemoveBone(int index)
+        {
+            TBone bone = _bones[index];
+            _bones.RemoveAt(index);
+            return bone;
+        }
+        public bool HasPlayableBone(int leftEnd,int rightEnd)
+        {
+            foreach(TBone bone in _bones)
+            {
+                if (bone.Left == leftEnd || bone.Right == leftEnd || bone.Left == rightEnd || bone.Right == rightEnd)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
 }

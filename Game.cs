@@ -1,91 +1,130 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace domino
 {
     public class Game
     {
+        // Уникальный идентификатор игры
         public int Game_id { get; private set; }
-        private List<TBone> _table = new List<TBone>();
-        private int _leftEnd;
-        private int _rightEnd;
 
+        private readonly List<TBone> _table = new List<TBone>();
+        
+        // players
+        private readonly List<Player> _players = new List<Player>();
+
+        // Левый и правый концы игрового стола
+        private int _left_end;
+        private int _right_end;
+
+        // Конструктор класса Game
         public Game(int game_id)
         {
             Game_id = game_id;
         }
-        public void ShowTable()
-        {
-            Console.WriteLine("Игровой стол:");
-            if (_table.Count == 0)
-            {
-                Console.WriteLine("Стол пуст");
-                return;
-            }
-            foreach (TBone bone in _table)
-            {
-                Console.Write($"[{bone.Left}:{bone.Right}]");
-            }
-            Console.WriteLine();
-            Console.WriteLine($"Левый конец: {_leftEnd}");
-            Console.WriteLine($"Правый конец: {_rightEnd}");
-        }
+
+        // Метод для проверки, пуст ли игровой стол
         public bool IsTableEmpty
         {
             get { return _table.Count == 0; }
         }
-        public bool TryPlayBone(Player player, int boneIndex, bool toLeft)
+
+        // Метод для получения текущего состояния игрового стола
+        public void ShowTable()
         {
-            TBone bone = player.GetBone(boneIndex);
+            Console.WriteLine("Игровой стол:");
+
+            if (IsTableEmpty)
+            {
+                Console.WriteLine("Стол пуст");
+                return;
+            }
+
+            foreach (TBone bone in _table)
+            {
+                Console.Write($"[{bone.Left}:{bone.Right}]");
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine($"Левый конец: {_left_end}");
+            Console.WriteLine($"Правый конец: {_right_end}");
+        }
+
+        // Метод для попытки сыграть кость игроком
+        public bool TryPlayBone(Player player, int bone_index, bool to_left)
+        {
+            if (player == null)
+            {
+                throw new ArgumentNullException(nameof(player));
+            }
+
+            if (bone_index < 0 || bone_index >= player.BoneCount)
+            {
+                return false;
+            }
+
+            TBone bone = player.GetBone(bone_index);
 
             if (IsTableEmpty)
             {
                 _table.Add(bone);
 
-                _leftEnd = bone.Left;
-                _rightEnd = bone.Right;
+                _left_end = bone.Left;
+                _right_end = bone.Right;
 
-                player.RemoveBone(boneIndex);
+                player.RemoveBone(bone_index);
 
                 return true;
             }
-            if (toLeft)
+
+            TBone table_bone = bone;
+
+            if (to_left)
             {
-                if (bone.Right == _leftEnd)
+                if (bone.Right == _left_end)
                 {
-                    _leftEnd= bone.Left;
+                    _left_end = bone.Left;
                 }
-                else if (bone.Left == _rightEnd)
+                else if (bone.Left == _left_end)
                 {
-                    _leftEnd = bone.Right;
+                    table_bone = new TBone(bone.Right, bone.Left);
+
+                    _left_end = bone.Right;
                 }
                 else
                 {
                     return false;
                 }
-                _table.Insert(0, bone);
 
+                _table.Insert(0, table_bone);
             }
             else
             {
-                if (bone.Left == _rightEnd)
+                if (bone.Left == _right_end)
                 {
-                    _rightEnd= bone.Right;
+                    _right_end = bone.Right;
                 }
-                else if(bone.Right == _rightEnd)
+                else if (bone.Right == _right_end)
                 {
-                    _rightEnd = bone.Left;
+                    table_bone = new TBone(bone.Right, bone.Left);
+
+                    _right_end = bone.Left;
                 }
                 else
                 {
+
                     return false;
                 }
-                _table.Add(bone);
+
+                _table.Add(table_bone);
             }
-            player.RemoveBone(boneIndex);
+
+            player.RemoveBone(bone_index);
+
             return true;
         }
+        
     }
-
 }

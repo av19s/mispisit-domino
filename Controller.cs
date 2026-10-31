@@ -6,7 +6,7 @@ namespace domino
 {
     public class Controller
     {
-        private GamePull _game_pull;
+        private readonly GamePull _game_pull;
 
         public Controller(GamePull game_pull)
         {

@@ -6,10 +6,13 @@ namespace domino
 {
     public class TKoloda
     {
-        Random rnd = new Random();
+        // Колода домино
+        private readonly Random _rnd = new Random();
 
-        private List<TBone> _dominos = new List<TBone>();
+        // Список всех костей в колоде
+        private readonly List<TBone> _dominos = new List<TBone>();
 
+        // Конструктор класса TKoloda
         public TKoloda()
         {
             for (int i = 0; i <= 6; i++)
@@ -19,11 +22,11 @@ namespace domino
                     TBone bone = new TBone(i, j);
 
                     _dominos.Add(bone);
-
-                    Console.WriteLine($"{i}:{j}");
                 }
             }
         }
+
+        // Метод для взятия кости из колоды
         public TBone TakeBone()
         {
             if (_dominos.Count == 0)
@@ -31,35 +34,39 @@ namespace domino
                 throw new InvalidOperationException("Колода пуста");
             }
 
-            int index = rnd.Next(0, _dominos.Count);
+            int index = _rnd.Next(0, _dominos.Count);
 
             TBone bone = _dominos[index];
 
             _dominos.RemoveAt(index);
+
             return bone;
         }
+
+        // Метод для взятия нескольких костей из колоды
         public List<TBone> TakeBones(int count)
         {
             if (count < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
+
+            if (count > _dominos.Count)
+            {
+                throw new InvalidOperationException("Недостаточно костей в колоде");
+            }
+
             List<TBone> bones = new List<TBone>();
 
-            for(int i =0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 bones.Add(TakeBone());
             }
+
             return bones;
         }
 
-        public void ShowPlayerBones(List<TBone> bones)
-        {
-            foreach(TBone bone in bones)
-            {
-                Console.WriteLine($"{bone.Left}:{bone.Right}");
-            }
-        }
+        // Метод для отображения оставшихся костей в колоде
         public void ShowRemainingBones()
         {
             Console.WriteLine("Оставшиеся кости в колоде:");
@@ -69,11 +76,13 @@ namespace domino
                 Console.WriteLine("Колода пуста");
                 return;
             }
-            foreach (TBone domino in _dominos)
+
+            foreach (TBone bone in _dominos)
             {
-                Console.WriteLine($"{domino.Left}:{domino.Right}");
+                Console.WriteLine($"{bone.Left}:{bone.Right}");
             }
-            Console.WriteLine($"Всего костей:{_dominos.Count}");
+            
+            Console.WriteLine($"Всего костей: {_dominos.Count}");
         }
     }
 }

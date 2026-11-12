@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace domino
 {
@@ -13,9 +12,34 @@ namespace domino
             _game_pull = game_pull;
         }
 
+        // Создание новой игры
         public Game create_game()
         {
             return _game_pull.create_game();
+        }
+
+        // Подготовка и запуск игры
+        public Game start_game(List<Player> players)
+        {
+            if (players == null || players.Count != 2)
+            {
+                throw new ArgumentException("Для игры необходимо два игрока");
+            }
+
+            if (players[0] == null || players[1] == null || object.ReferenceEquals(players[0], players[1]))
+            {
+                throw new ArgumentException("Необходимо передать двух разных игроков");
+            }
+
+            Game game = create_game();
+
+            TKoloda koloda = new TKoloda();
+
+            Referee referee = new Referee();
+
+            game.start_demo(players, koloda, referee);
+
+            return game;
         }
     }
 }

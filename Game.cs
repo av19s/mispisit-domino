@@ -1,34 +1,43 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 
 namespace domino
 {
     public class Game
     {
+        // Идентификатор игры
         public int Game_id { get; private set; }
 
-        private readonly List<TBone> _table = new List<TBone>();
+        // Игроки
         private readonly List<Player> _players = new List<Player>();
 
-        private int _left_end;
-        private int _right_end;
+        // Игровая цепочка
+        private TChain? _chain;
 
+        // Конструктор
         public Game(int game_id)
         {
             Game_id = game_id;
         }
 
+        // Проверка пустого стола
         public bool IsTableEmpty
         {
-            get { return _table.Count == 0; }
+            get { return _chain == null; }
         }
 
-        // Запуск партии
+        // Запуск демонстрационной игры
         internal void start_demo(
             List<Player> players,
             TKoloda koloda,
             Referee referee)
         {
+            if (players == null || players.Count != 2)
+            {
+                throw new ArgumentException("Необходимо два игрока");
+            }
+
             if (_players.Count > 0)
             {
                 throw new InvalidOperationException("Игра уже запущена");
@@ -84,14 +93,14 @@ namespace domino
 
             if (!move_2)
             {
-                Console.WriteLine("У второго игрока нет подходящей кости");
+                Console.WriteLine("У игрока нет подходящей кости");
             }
 
             Console.WriteLine($"Результат хода: {move_2}");
 
             ShowTable();
 
-            // Вывод результатов
+            // Состояние игроков
             Console.WriteLine("\nКости игроков после ходов:");
 
             foreach (Player player in _players)
@@ -99,12 +108,13 @@ namespace domino
                 player.ShowBones();
             }
 
+            // Оставшаяся колода
             Console.WriteLine("\nОстаток колоды:");
 
             koloda.ShowRemainingBones();
         }
 
-        // Поиск стартовой кости игрока
+        // Поиск стартовой кости
         private int find_first_bone_index(Player player)
         {
             int? min_double = player.GetMinDouble();
@@ -134,20 +144,20 @@ namespace domino
             return -1;
         }
 
-        // Поиск и выполнение допустимого хода
+        // Поиск подходящей кости
         private bool try_play_any_bone(Player player)
         {
             for (int i = 0; i < player.BoneCount; i++)
             {
                 if (TryPlayBone(player, i, false))
                 {
-                    Console.WriteLine($"Кость поставлена справа");
+                    Console.WriteLine($"Кость {i} поставлена справа");
                     return true;
                 }
 
                 if (TryPlayBone(player, i, true))
                 {
-                    Console.WriteLine($"Кость поставлена слева");
+                    Console.WriteLine($"Кость {i} поставлена слева");
                     return true;
                 }
             }
@@ -155,29 +165,7 @@ namespace domino
             return false;
         }
 
-        // Отображение игрового стола
-        public void ShowTable()
-        {
-            Console.WriteLine("Игровой стол:");
-
-            if (IsTableEmpty)
-            {
-                Console.WriteLine("Стол пуст");
-                return;
-            }
-
-            foreach (TBone bone in _table)
-            {
-                Console.Write($"[{bone.Left}:{bone.Right}]");
-            }
-
-            Console.WriteLine();
-
-            Console.WriteLine($"Левый конец: {_left_end}");
-            Console.WriteLine($"Правый конец: {_right_end}");
-        }
-
-        // Попытка поставить кость на стол
+        // Выполнение хода
         public bool TryPlayBone(Player player, int bone_index, bool to_left)
         {
             if (player == null)
@@ -192,62 +180,61 @@ namespace domino
 
             TBone bone = player.GetBone(bone_index);
 
+            // Первая кость создаёт цепочку
             if (IsTableEmpty)
             {
-                _table.Add(bone);
-
-                _left_end = bone.Left;
-                _right_end = bone.Right;
+                _chain = new TChain(bone);
 
                 player.RemoveBone(bone_index);
 
                 return true;
             }
 
-            TBone table_bone = bone;
+            // Добавление в существующую цепочку
+            bool result;
 
             if (to_left)
             {
-                if (bone.Right == _left_end)
-                {
-                    _left_end = bone.Left;
-                }
-                else if (bone.Left == _left_end)
-                {
-                    table_bone = new TBone(bone.Right, bone.Left);
-
-                    _left_end = bone.Right;
-                }
-                else
-                {
-                    return false;
-                }
-
-                _table.Insert(0, table_bone);
+                result = _chain!.AddLeft(bone);
             }
             else
             {
-                if (bone.Left == _right_end)
-                {
-                    _right_end = bone.Right;
-                }
-                else if (bone.Right == _right_end)
-                {
-                    table_bone = new TBone(bone.Right, bone.Left);
-
-                    _right_end = bone.Left;
-                }
-                else
-                {
-                    return false;
-                }
-
-                _table.Add(table_bone);
+                result = _chain!.AddRight(bone);
             }
 
-            player.RemoveBone(bone_index);
+            // Удаляем кость из руки только при успешном ходе
+            if (result)
+            {
+                player.RemoveBone(bone_index);
+            }
 
-            return true;
+            return result;
+        }
+
+        // Отображение игрового стола
+        public void ShowTable()
+        {
+            Console.WriteLine("Игровой стол:");
+
+            if (IsTableEmpty)
+            {
+                Console.WriteLine("Стол пуст");
+                return;
+            }
+
+            foreach (TBone bone in _chain!.GetPlayedBones())
+            {
+                Console.Write($"[{bone.Left}:{bone.Right}]");
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine($"Левый конец: {_chain.GetLeftEnd()}");
+            Console.WriteLine($"Правый конец: {_chain.GetRightEnd()}");
+
+            Console.WriteLine(
+                $"Количество сыгранных костей: {_chain.GetPlayedBoneCount()}"
+            );
         }
     }
 }

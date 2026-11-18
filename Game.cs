@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace domino
@@ -14,6 +13,9 @@ namespace domino
 
         // Игровая цепочка
         private TChain? _chain;
+
+        // Событие успешного хода
+        public event Action<Player, TBone>? BonePlayed;
 
         // Конструктор
         public Game(int game_id)
@@ -187,6 +189,8 @@ namespace domino
 
                 player.RemoveBone(bone_index);
 
+                BonePlayed?.Invoke(player, bone);
+
                 return true;
             }
 
@@ -206,6 +210,8 @@ namespace domino
             if (result)
             {
                 player.RemoveBone(bone_index);
+
+                BonePlayed?.Invoke(player, bone);
             }
 
             return result;

@@ -37,6 +37,13 @@ namespace domino
 
             Referee referee = new Referee();
 
+            // Создание наблюдателя
+            GameObserver observer = new GameObserver();
+
+            // Подписка на событие успешного хода
+            game.BonePlayed += observer.OnBonePlayed;
+
+            // Запуск демонстрационной партии
             game.start_demo(players, koloda, referee);
 
             return game;

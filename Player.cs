@@ -52,6 +52,20 @@ namespace domino
             return minSum;
         }
 
+        // Метод для получения оставшихся очков игрока
+        public int GetRemainingPoints()
+        {
+            int points = 0;
+
+            foreach (TBone bone in _bones)
+            {
+                points += bone.Left + bone.Right;
+            }
+
+            return points;
+        }
+
+
         // Метод для получения минимального дубля игрока
         public int? GetMinDouble()
         {

@@ -68,5 +68,25 @@ namespace domino
 
             return first_index;
         }
+
+        // Метод для определения победителя по очкам
+        public int WhoWinsByPoints(List<Player> players)
+        {
+            if (players == null || players.Count != 2)
+            {
+                throw new ArgumentException("Необходимо два игрока");
+            }
+
+            int points_1 = players[0].GetRemainingPoints();
+            int points_2 = players[1].GetRemainingPoints();
+
+            if (points_1 == points_2)
+            {
+                return -1;
+            }
+
+            return points_1 < points_2 ? 0 : 1;
+        }
+
     }
 }

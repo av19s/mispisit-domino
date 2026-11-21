@@ -84,5 +84,11 @@ namespace domino
             
             Console.WriteLine($"Всего костей: {_dominos.Count}");
         }
+
+        // Метод для получения количества оставшихся костей в колоде
+        public int BoneCount
+        {
+            get { return _dominos.Count; }
+        }
     }
 }

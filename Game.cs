@@ -91,11 +91,24 @@ namespace domino
             // Второй ход
             Console.WriteLine($"\n{second_player.Name} делает ход:");
 
+            // Попытка сыграть любую кость
             bool move_2 = try_play_any_bone(second_player);
 
+            // Если подходящей кости нет, то игрок добирает кости из колоды до тех пор, пока не сможет сделать ход
             if (!move_2)
             {
-                Console.WriteLine("У игрока нет подходящей кости");
+                Console.WriteLine("Подходящих костей нет. Начинается добор.");
+
+                if (draw_until_playable(second_player, koloda))
+                {
+                    move_2 = try_play_any_bone(second_player);
+                }
+            }
+
+            // Если после добора подходящей кости нет, то игрок пропускает ход
+            if (!move_2)
+            {
+                Console.WriteLine($"{second_player.Name} пропускает ход");
             }
 
             Console.WriteLine($"Результат хода: {move_2}");
@@ -215,6 +228,28 @@ namespace domino
             }
 
             return result;
+        }
+
+        // Вытягивание костей до тех пор, пока игрок не сможет сделать ход
+        private bool draw_until_playable(Player player, TKoloda koloda)
+        {
+            if (IsTableEmpty)
+            {
+                return false;
+            }
+
+            while (!player.HasPlayableBone(
+                _chain!.GetLeftEnd(),
+                _chain.GetRightEnd()) && koloda.BoneCount > 0)
+            {
+                player.TakeBone(koloda);
+
+                Console.WriteLine($"{player.Name} взял кость из колоды");
+            }
+
+            return player.HasPlayableBone(
+                _chain!.GetLeftEnd(),
+                _chain.GetRightEnd());
         }
 
         // Отображение игрового стола

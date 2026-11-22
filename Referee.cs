@@ -125,24 +125,56 @@ namespace domino
             return first_index;
         }
 
-        // Метод для определения победителя по очкам (переделать)
-        public int WhoWinsByPoints(List<Player> players)
+        // Выбор первого игрока и установка текущего обработчика
+        public void choose_first_player()
         {
-            if (players == null || players.Count != 2)
+            List<Player> players = new List<Player>();
+
+            foreach (PlayerHandler handler in _handlers)
             {
-                throw new ArgumentException("Необходимо два игрока");
+                players.Add(handler.Player);
             }
 
-            int points_1 = players[0].GetRemainingPoints();
-            int points_2 = players[1].GetRemainingPoints();
+            int first_index = WhoFirst(players);
 
-            if (points_1 == points_2)
-            {
-                return -1;
-            }
+            _current_handler = _handlers[first_index];
 
-            return points_1 < points_2 ? 0 : 1;
+            Console.WriteLine(
+                $"Первым ходит {_current_handler.Player.Name}"
+            );
         }
+
+        // Метод для определения победителя по очкам (переделать)
+        internal int WhoWinsByPoints(List<Player> players)
+        {
+            if (players == null || players.Count < 2 || players.Count > 4)
+            {
+                throw new ArgumentException("Количество игроков должно быть от 2 до 4");
+            }
+
+            int winner_index = -1;
+            int min_points = int.MaxValue;
+            bool is_tie = false; // Флаг для проверки на ничью
+
+            for (int i = 0; i < players.Count; i++)
+            {
+                int points = players[i].GetRemainingPoints();
+
+                if (points < min_points)
+                {
+                    min_points = points;
+                    winner_index = i;
+                    is_tie = false;
+                }
+                else if (points == min_points)
+                {
+                    is_tie = true;
+                }
+            }
+
+            return is_tie ? -1 : winner_index;
+        }
+
 
     }
 }

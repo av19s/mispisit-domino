@@ -51,8 +51,42 @@ namespace domino
             SkipTurn();
         }
 
+        // Попытка сделать ход
         private bool TryMakeMove(Game game)
         {
+            // Если стол пустой, выбираем стартовую кость
+            if (game.IsTableEmpty)
+            {
+                int? min_double = Player.GetMinDouble();
+                int min_sum = Player.GetMinSum();
+
+                for (int i = 0; i < Player.BoneCount; i++)
+                {
+                    TBone bone = Player.GetBone(i);
+
+                    if (min_double != null)
+                    {
+                        // Ищем младший дубль
+                        if (bone.Left == min_double.Value &&
+                            bone.Right == min_double.Value)
+                        {
+                            return game.TryPlayBone(Player, i, false);
+                        }
+                    }
+                    else
+                    {
+                        // Если дублей нет, ищем кость с минимальной суммой
+                        if (bone.Left + bone.Right == min_sum)
+                        {
+                            return game.TryPlayBone(Player, i, false);
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            // Обычный ход - перебор костей
             for (int i = 0; i < Player.BoneCount; i++)
             {
                 if (game.TryPlayBone(Player, i, false))
@@ -68,7 +102,6 @@ namespace domino
 
             return false;
         }
-
 
         // Пропуск хода
         private void SkipTurn()

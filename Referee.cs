@@ -144,7 +144,7 @@ namespace domino
             );
         }
 
-        // Метод для определения победителя по очкам (переделать)
+        // Метод для определения победителя по очкам
         internal int WhoWinsByPoints(List<Player> players)
         {
             if (players == null || players.Count < 2 || players.Count > 4)

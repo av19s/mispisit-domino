@@ -19,9 +19,9 @@ namespace domino
 
         public Game start_game(List<Player> players)
         {
-            if (players == null || players.Count != 2)
+            if (players == null || players.Count < 2 || players.Count > 4)
             {
-                throw new ArgumentException("Для игры необходимо два игрока");
+                throw new ArgumentException("Количество игроков должно быть от 2 до 4");
             }
 
             if (players[0] == null ||

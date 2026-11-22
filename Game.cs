@@ -26,14 +26,16 @@ namespace domino
         }
 
         // Игровой цикл
-        internal void run_game(
-            List<Player> players,
-            TKoloda koloda,
-            Referee referee)
+        internal void run_game(List<Player> players, TKoloda koloda, Referee referee)
         {
-            if (players == null || players.Count != 2)
+            if (players == null || players.Count < 2 || players.Count > 4)
             {
-                throw new ArgumentException("Необходимо два игрока");
+                throw new ArgumentException("Количество игроков должно быть от 2 до 4");
+            }
+
+            if (koloda == null || referee == null)
+            {
+                throw new ArgumentNullException();
             }
 
             if (_players.Count > 0)
@@ -43,94 +45,44 @@ namespace domino
 
             _players.AddRange(players);
 
-            Console.WriteLine($"Создана игра №{Game_id}");
+            // Создаём кольцевую цепочку игроков
+            referee.create_chain(players);
 
-            // Раздача костей
-            foreach (Player player in _players)
+            // Раздаём каждому игроку по 7 костей
+            foreach (Player player in players)
             {
                 player.TakeBones(koloda, 7);
-            }
-
-            Console.WriteLine("\nКости игроков:");
-
-            foreach (Player player in _players)
-            {
                 player.ShowBones();
             }
 
             // Определяем первого игрока
-            int current_index = referee.WhoFirst(_players);
+            referee.choose_first_player();
 
-            Console.WriteLine(
-                $"\nПервым ходит: {_players[current_index].Name}"
-            );
-
-            int turn_number = 1;
             int consecutive_passes = 0;
+            int turn_number = 1;
 
-            // Игровой цикл
             while (true)
             {
-                Player current_player = _players[current_index];
+                // Получаем текущего обработчика
+                PlayerHandler current_handler = referee.CurrentHandler;
+                Player current_player = current_handler.Player;
 
-                Console.WriteLine(
-                    $"\nХод №{turn_number}. Игрок: {current_player.Name}"
-                );
+                Console.WriteLine($"\nХод {turn_number}: {current_player.Name}");
 
-                bool move = false;
+                // Выполняем ход
+                current_handler.Handle(this, koloda);
 
-                // Первый ход
-                if (IsTableEmpty)
+                if (current_handler.LastTurnSucceeded)
                 {
-                    int bone_index = find_first_bone_index(current_player);
-
-                    if (bone_index == -1)
-                    {
-                        throw new InvalidOperationException(
-                            "Стартовая кость не найдена"
-                        );
-                    }
-
-                    move = TryPlayBone(current_player, bone_index, true);
-                }
-                else
-                {
-                    // Попытка сделать ход
-                    move = try_play_any_bone(current_player);
-
-                    // Если подходящих костей нет - добираем из колоды до появления подходящей кости
-                    if (!move)
-                    {
-                        bool can_move = draw_until_playable(
-                            current_player,
-                            koloda
-                        );
-
-                        if (can_move)
-                        {
-                            move = try_play_any_bone(current_player);
-                        }
-                    }
-                }
-
-                if (move)
-                {
+                    // Успешный ход сбрасывает счётчик пропусков
                     consecutive_passes = 0;
 
                     ShowTable();
 
-                    Console.WriteLine(
-                        $"У игрока {current_player.Name} осталось " +
-                        $"{current_player.BoneCount} костей"
-                    );
-
-                    // Проверка победы
+                    // Проверяем победу
                     if (current_player.BoneCount == 0)
                     {
-                        Console.WriteLine(
-                            $"\nПобедитель: {current_player.Name}!"
-                        );
-
+                        Console.WriteLine($"\nПобедитель: {current_player.Name}");
                         break;
                     }
                 }
@@ -138,39 +90,29 @@ namespace domino
                 {
                     consecutive_passes++;
 
-                    Console.WriteLine(
-                        $"{current_player.Name} пропускает ход"
-                    );
-
-                    // Ходов больше нет и колода пуста - объявляем "рыбу" 
+                    // Проверяем возникновение рыбы
                     if (consecutive_passes >= _players.Count &&
                         koloda.BoneCount == 0)
                     {
                         Console.WriteLine("\nРыба! Ходов больше нет.");
 
                         show_fish_result(referee);
-
                         break;
                     }
                 }
 
                 // Передаём ход следующему игроку
-                current_index = (current_index + 1) % _players.Count;
+                referee.next_turn();
 
                 turn_number++;
             }
 
-            // Итоговое состояние
-            Console.WriteLine("\nИгра завершена");
-
-            Console.WriteLine("\nКости игроков:");
+            Console.WriteLine("\nИтоговые кости игроков:");
 
             foreach (Player player in _players)
             {
                 player.ShowBones();
             }
-
-            Console.WriteLine("\nОстаток колоды:");
 
             koloda.ShowRemainingBones();
         }
